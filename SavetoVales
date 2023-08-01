@@ -1,0 +1,13 @@
+Sub savetovales()
+
+
+If MsgBox("Check this before running the program." & vbCrLf & "1. Is the ORDER REPORT FY2016 excel opened?" & vbCrLf & "2. Have you Duplicated the file before activating the function?" & vbCrLf & "3. Make sure you have the updated values in the excel file, you can hit [Calculate] before running the program" & vbCrLf & "4. Go Formula and turn manual calculate, otherwise you will wait a year for calculation" & vbCrLf & "-> If not, please hit NO, duplicate the file, update the name with latest date, and come back later. ", vbYesNo, "Foolproof - Pokayoke") = vbNo Then Exit Sub
+
+'Updateby Extendoffice
+    Dim wsh As Worksheet
+    For Each wsh In ThisWorkbook.Worksheets
+        wsh.Cells.Copy
+        wsh.Cells.PasteSpecial xlPasteValues
+    Next
+    Application.CutCopyMode = False
+End Sub
