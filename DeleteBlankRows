@@ -1,0 +1,15 @@
+Sub DeleteBlankRows()
+    Dim ws As Worksheet
+    Dim lastRow As Long
+    Dim i As Long
+
+    Set ws = ThisWorkbook.Worksheets("Convert A (2)") ' ? "YourSheetName" 替??您要操作的工作表名?
+
+    lastRow = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row
+
+    For i = lastRow To 1 Step -1
+        If Application.WorksheetFunction.CountA(ws.Rows(i)) = 0 Then
+            ws.Rows(i).EntireRow.Delete
+        End If
+    Next i
+End Sub
