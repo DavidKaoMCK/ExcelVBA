@@ -1,0 +1,64 @@
+Sub TransposeData()
+    Dim srcSheet As Worksheet
+    Dim destSheet As Worksheet
+    Dim srcLastRow As Long
+    Dim destLastRow As Long
+    Dim srcRow As Long
+    Dim destRow As Long
+    Dim col As Long
+    Dim productName As String
+    Dim component As String
+    Dim quantity As Integer
+    
+    ' 設定原始資料工作表
+    Set srcSheet = ThisWorkbook.Sheets("Convert A")
+    
+    ' 創建轉置後資料的工作表，如果已經存在則刪除重建
+    On Error Resume Next
+    Application.DisplayAlerts = False
+    ThisWorkbook.Sheets("Convert B").Delete
+    Application.DisplayAlerts = True
+    On Error GoTo 0
+    Set destSheet = ThisWorkbook.Sheets.Add(After:=srcSheet)
+    destSheet.Name = "Convert B"
+    
+    ' 將表頭寫入轉置後資料工作表
+    destSheet.Range("A1").Value = "Component"
+    destSheet.Range("B1").Value = "Product"
+    destSheet.Range("C1").Value = "Quantity"
+    
+    ' 取得原始資料的最後一列
+    srcLastRow = srcSheet.Cells(srcSheet.Rows.Count, "A").End(xlUp).Row
+    
+    ' 初始化目標資料的列數
+    destRow = 2
+    
+    ' 循環處理每一行原始資料
+    For srcRow = 1 To srcLastRow Step 2
+        ' 取得元件名稱
+        component = srcSheet.Cells(srcRow, "A").Value
+        
+        ' 循環處理每一列的產品資料，每一列都對應到一個產品名稱和數量
+        For col = 2 To 51
+            ' 取得產品名稱
+            productName = srcSheet.Cells(srcRow, col).Value
+            
+            ' 如果產品名稱為空，則跳出循環
+            If productName = "" Then Exit For
+            
+            ' 取得數量
+            quantity = srcSheet.Cells(srcRow + 1, col).Value
+            
+            ' 將資料寫入目標資料工作表
+            destSheet.Cells(destRow, "A").Value = component
+            destSheet.Cells(destRow, "B").Value = productName
+            destSheet.Cells(destRow, "C").Value = quantity
+            
+            ' 增加目標資料的列數
+            destRow = destRow + 1
+        Next col
+    Next srcRow
+    
+    ' 自動調整目標資料工作表的欄寬
+    destSheet.Columns.AutoFit
+End Sub
