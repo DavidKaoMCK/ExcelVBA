@@ -1,0 +1,97 @@
+Sub UpdateSummary()
+    Dim ws As Worksheet
+    Dim summarySheet As Worksheet
+    Dim lastRow As Long
+    Dim i As Long
+    Dim partName As String
+    Dim currentFree As Double
+    Dim openSales As Double
+    Dim openPurchase As Double
+
+    ' Set the summary sheet
+    Set summarySheet = ThisWorkbook.Sheets("Component Parts Summary")
+
+    ' Insert new column if not exists
+    If summarySheet.Cells(1, "A").Value <> "SS index" Then
+        summarySheet.Columns("A").Insert
+        summarySheet.Cells(1, "A").Value = "SS index"
+    End If
+
+    ' Set column headers
+    summarySheet.Cells(6, "U").Value = "CURRENT FREE STOCK"
+    summarySheet.Cells(6, "V").Value = "OPEN SALES"
+    summarySheet.Cells(6, "W").Value = "OPEN PURCHASE"
+    summarySheet.Cells(6, "X").Value = "SALES PREDIC"
+    summarySheet.Cells(6, "Y").Value = "SALES PREDIC 2"
+    summarySheet.Cells(6, "Z").Value = "PURCHASE PLAN"
+
+    ' Hide columns
+    summarySheet.Columns("F:Q").EntireColumn.Hidden = True
+    summarySheet.Columns("S:T").EntireColumn.Hidden = True
+
+    ' Loop through each part in the summary sheet
+    For i = 9 To 290
+        partName = summarySheet.Cells(i, "B").Value
+        currentFree = 0
+        openSales = 0
+        openPurchase = 0
+
+        ' Loop through each sheet in the workbook
+        For Each ws In ThisWorkbook.Sheets
+            ' Skip the summary sheet
+            If ws.Name <> "Component Parts Summary" Then
+                ' Check if the sheet name matches the part name
+                If ws.Name = partName Then
+                    ' Find the last row in the sheet
+                    lastRow = ws.Cells(ws.Rows.Count, "B").End(xlUp).Row
+
+                    ' Loop through each transaction in the sheet
+                    For j = 101 To lastRow
+                        Select Case ws.Cells(j, "C").Value
+                            Case "PURCHASE"
+                                openPurchase = openPurchase + ws.Cells(j, "H").Value
+                            Case "ORDER"
+                                openSales = openSales + ws.Cells(j, "J").Value
+                            Case "SHIPMENT"
+                                currentFree = ws.Cells(j, "I").Value
+                        End Select
+                    Next j
+
+                    ' Update the summary sheet
+                    summarySheet.Cells(i, "U").Value = currentFree
+                    summarySheet.Cells(i, "V").Value = -openSales ' Multiply by -1 to make the value positive
+                    summarySheet.Cells(i, "W").Value = openPurchase
+
+                    ' Calculate SS index
+                    If summarySheet.Cells(i, "R").Value <> 0 Then
+                        summarySheet.Cells(i, "A").Formula = "=(U" & i & "+W" & i & "-V" & i & ")/((R" & i & "+1)/12)"
+                        If summarySheet.Cells(i, "A").Value = 0 Or IsError(summarySheet.Cells(i, "A").Value) Then
+                            summarySheet.Cells(i, "A").ClearContents
+                        End If
+                    End If
+                End If
+            End If
+        Next ws
+    Next i
+
+    ' Apply color gradient
+    With summarySheet.Range("A9:A290").FormatConditions.AddColorScale(ColorScaleType:=3)
+        .ColorScaleCriteria(1).Type = xlConditionValueNumber
+        .ColorScaleCriteria(1).Value = 6
+        With .ColorScaleCriteria(1).FormatColor
+            .Color = 255
+            .TintAndShade = 0
+        End With
+        .ColorScaleCriteria(2).Type = xlConditionValueNumber
+        .ColorScaleCriteria(2).Value = 18
+        With .ColorScaleCriteria(2).FormatColor
+            .Color = 5287936
+            .TintAndShade = 0
+        End With
+        .ColorScaleCriteria(3).Type = xlConditionValueHighestValue
+        With .ColorScaleCriteria(3).FormatColor
+            .Color = 5287936
+            .TintAndShade = 0
+        End With
+    End With
+End Sub
