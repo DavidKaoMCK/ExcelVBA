@@ -1,0 +1,91 @@
+Sub CompareAndExtractUniqueParts()
+    Dim newCMaterialSheet As Worksheet
+    Dim currentOpoSheet As Worksheet
+    Dim uniquePartsSheet As Worksheet
+    Dim newCMaterialLastRow As Long
+    Dim currentOpoLastRow As Long
+    Dim uniquePartsLastRow As Long
+    Dim newCMaterialColumn As Range
+    Dim currentOpoColumn As Range
+    Dim partName As Variant
+    Dim foundInCurrentOpo As Boolean
+    Dim uniquePartsDict As Object
+    
+    ' Set 'New C Material', 'Current Opo', and 'Unique Parts' worksheets
+    Set newCMaterialSheet = ThisWorkbook.Sheets("New C Material")
+    Set currentOpoSheet = ThisWorkbook.Sheets("Current Opo")
+    
+    ' Create 'Unique Parts' worksheet and delete if it already exists
+    On Error Resume Next
+    Application.DisplayAlerts = False
+    ThisWorkbook.Sheets("Unique Parts").Delete
+    Application.DisplayAlerts = True
+    On Error GoTo 0
+    Set uniquePartsSheet = ThisWorkbook.Sheets.Add(After:=currentOpoSheet)
+    uniquePartsSheet.Name = "Unique Parts"
+    
+    ' Add header to 'Unique Parts' worksheet
+    uniquePartsSheet.Range("A1").Value = "Unique Parts"
+    uniquePartsSheet.Range("A1").Font.Bold = True
+    
+    ' Get the last row of 'New C Material' and 'Current Opo' worksheets
+    newCMaterialLastRow = newCMaterialSheet.Cells(newCMaterialSheet.Rows.Count, "A").End(xlUp).Row
+    currentOpoLastRow = currentOpoSheet.Cells(currentOpoSheet.Rows.Count, "A").End(xlUp).Row
+    
+    ' Get the 'Column A' ranges of 'New C Material' and 'Current Opo' worksheets
+    Set newCMaterialColumn = newCMaterialSheet.Range("A2:A" & newCMaterialLastRow)
+    Set currentOpoColumn = currentOpoSheet.Range("A2:A" & currentOpoLastRow)
+    
+    ' Initialize the last row of 'Unique Parts' worksheet
+    uniquePartsLastRow = 2
+    
+    ' Use a dictionary object to store unique part names
+    Set uniquePartsDict = CreateObject("Scripting.Dictionary")
+    
+    ' Loop through each part name in 'New C Material' worksheet
+    For Each partName In newCMaterialColumn
+        foundInCurrentOpo = False
+        
+        ' Search for the part name in 'Current Opo' worksheet
+        If WorksheetFunction.CountIf(currentOpoColumn, partName.Value) = 0 Then
+            ' If the part name is not found, add it to 'Unique Parts' worksheet and dictionary
+            uniquePartsSheet.Cells(uniquePartsLastRow, "A").Value = partName.Value
+            uniquePartsDict(partName.Value) = 1
+            uniquePartsLastRow = uniquePartsLastRow + 1
+        End If
+    Next partName
+    
+    ' Autofit the 'Column A' width in 'New C Material' worksheet
+    newCMaterialSheet.Columns("A").AutoFit
+    
+    ' Autofit the 'Column A' width in 'Unique Parts' worksheet
+    uniquePartsSheet.Columns("A").AutoFit
+    
+    ' Release the memory used by the dictionary object
+    Set uniquePartsDict = Nothing
+    
+    ' Prompt message
+    MsgBox "Comparison complete. Only the part names present in 'New C Material' but not found in 'Current Opo' have been stored in the 'Unique Parts' worksheet."
+    
+    ' Remove duplicates in the 'Unique Parts' worksheet
+    Dim lastRow As Long
+    Dim rng As Range
+    
+    ' Set the 'Unique Parts' worksheet
+    Set uniquePartsSheet = ThisWorkbook.Sheets("Unique Parts")
+    
+    ' Get the last row of the 'Unique Parts' worksheet
+    lastRow = uniquePartsSheet.Cells(uniquePartsSheet.Rows.Count, "A").End(xlUp).Row
+    
+    ' Get the data range of the 'Unique Parts' worksheet
+    Set rng = uniquePartsSheet.Range("A2:A" & lastRow)
+    
+    ' Remove duplicates in the data range
+    rng.RemoveDuplicates Columns:=1, Header:=xlNo
+    
+    ' Autofit the 'Column A' width in the 'Unique Parts' worksheet
+    uniquePartsSheet.Columns("A").AutoFit
+    
+    ' Prompt message
+    MsgBox "Duplicates have been removed in the 'Unique Parts' worksheet, keeping only the unique data."
+End Sub
