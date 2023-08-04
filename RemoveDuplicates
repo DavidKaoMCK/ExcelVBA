@@ -1,0 +1,30 @@
+Sub RemoveDuplicates()
+    Dim ws As Worksheet
+    Dim lastRow As Long
+    Dim i As Long, j As Long
+    Dim itemCol As Long, materialCol As Long
+    Dim item As String, material As String
+    
+    ' Set the worksheet and column indices
+    Set ws = ThisWorkbook.Sheets("ToExcel_CurrentMaterials (6)") ' Replace "Sheet1" with your worksheet name
+    itemCol = 1 ' Replace 1 with the index of the "Item" column, e.g., A column is 1, B column is 2, and so on
+    materialCol = 2 ' Replace 2 with the index of the "Material" column
+    
+    ' Get the last row
+    lastRow = ws.Cells(ws.Rows.Count, itemCol).End(xlUp).Row
+    
+    ' Loop through rows from the last row upwards to check for duplicates and delete them
+    For i = lastRow To 2 Step -1 ' Start from the last row and move upwards, the first row doesn't need to be checked
+        item = ws.Cells(i, itemCol).Value
+        material = ws.Cells(i, materialCol).Value
+        
+        ' Check if there are any previous rows with the same "Item" and "Material"
+        For j = i - 1 To 1 Step -1
+            If ws.Cells(j, itemCol).Value = item And ws.Cells(j, materialCol).Value = material Then
+                ' Found a duplicate, delete the current row
+                ws.Rows(i).Delete
+                Exit For
+            End If
+        Next j
+    Next i
+End Sub
